@@ -240,7 +240,7 @@ def get_res_asa(asafile):
     res_asa = {}
     for res in model.get_residues():
         #print((res.get_resname(), res.parent.get_id(), res.get_id()[1]))
-        resname = '%s/%s/%d' % (res.get_resname(), res.parent.get_id(), res.get_id()[1])
+        resname = '%s/%s/%d' % (res.get_resname().strip(), res.parent.get_id(), res.get_id()[1])
         res_asa[resname] = sum([atom.get_bfactor() for atom in res.get_atoms()])
         
     return res_asa
