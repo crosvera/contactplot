@@ -84,7 +84,7 @@ set terminal pngcairo size {size[0]},{size[1]} enhanced font 'Verdana,10'
 set output '{output}'
 unset key
 
-set multiplot title "Contact map from {structure}.\\nBuried surface in residues of Chain A caused by residues of Chain B" font "Verdana,18"
+set multiplot title "Contact map from {structure}.\\nBuried surface in residues of Chain {chains[0]} caused by residues of Chain {chains[1]}" font "Verdana,18"
 
 set view map
 set pm3d
@@ -125,7 +125,7 @@ set bmargin at screen 0.151
 set tmargin at screen 0.95
 
 
-set colorbox user origin .96, .15 size .02, .8
+set colorbox user origin .96, .160 size .015, .790
 set cbtics font "Verdana, 14"
 
 unset xtics
@@ -149,13 +149,14 @@ set style fill transparent solid 0.5
 set lmargin at screen 0.08
 set rmargin at screen 0.13
 
-set ylabel "Chain B"
+set ylabel "Chain {chains[1]}"
 set ylabel font "Verdana,14"
 set ytics nomirror font "Verdana,10" offset character 0,0,0 autojustify
 
-set x2tics 0,0.5,1 offset -1
+#set x2tics 0,0.5,1 offset -1
+set x2tics 0,50,100 offset -1 format "%1.0f%%"
 
-plot "{bsaasa_b}" using ($3*0.5):1:($3*0.5):(0.4):ytic(2) with boxxyerrorbars lc rgb 0x5599 axes x2y1
+plot "{bsaasa_b}" using ($3*0.5*100):1:($3*0.5*100):(0.4):ytic(2) with boxxyerrorbars lc rgb 0x5599 axes x2y1
 
 set lmargin at screen 0.13
 set rmargin at screen 0.95
@@ -171,12 +172,13 @@ unset arrow 1
 
 set key at -1, 0.5
 
-set xlabel "Chain A"
+set xlabel "Chain {chains[0]}"
 set xlabel font "Verdana,14"
 set xrange [-0.5: rangex+0.5]
 unset x2tics
-set y2tics 0,0.5,1 offset -1
-plot "{bsaasa_a}" using 1:3:xtic(2) with boxes lc rgb 0x5599 title "BSA/ASA" axes x1y2
+#set y2tics 0,0.5,1 offset -1
+set y2tics 0,50,100 format "%1.0f%%"
+plot "{bsaasa_a}" using 1:($3*100):xtic(2) with boxes lc rgb 0x5599 title "Burial percentage\\n(BSA/ASA)" axes x1y2
 
 """
 
@@ -267,16 +269,21 @@ def get_res_bsa_vs_asa(tablefile, asafile, skip_none_contact=True):
     return res_bsa_asa_a, res_bsa_asa_b
 
 
-def get_chains(tablefile):
-    return None, None
+def get_chains(contacts_df):
+    index_name = contacts_df.index.name
+    if '->' in index_name:
+        chainb, chaina = index_name.split('->')
+    elif '<-' in index_name:
+        chaina, chainb = index_name.split('<-')
+    else:
+        chaina = chainb = ''
+    return chaina, chainb
 
 
 def plot_contact_bsaasa(tablefile, asafile, output, 
                         skip_none_contact=True, size=(1024,900)):
     res_bsa_asa_a, res_bsa_asa_b = get_res_bsa_vs_asa(tablefile, asafile,
                                                       skip_none_contact)
-    chaina, chainb = get_chains(tablefile)
-
     chaina_input = tempfile.NamedTemporaryFile('w')
     for i, res in enumerate(res_bsa_asa_a):
         l = '%d, %s, %f\n' % (i, res, res_bsa_asa_a[res])
@@ -302,10 +309,12 @@ def plot_contact_bsaasa(tablefile, asafile, output,
 
     structurename = tablefile.split(os.sep)[-1].split('.')[0]
     
+    chaina, chainb = get_chains(df)
     script_parameters = dict(contacts=inputf.name, output=output, size=size,
                              structure=structurename,
                              bsaasa_a=chaina_input.name,
                              bsaasa_b=chainb_input.name,
+                             chains = (chaina, chainb)
                              )
     scriptf.file.write(gnuplot_bsaasa.format(**script_parameters))
     scriptf.file.close()
