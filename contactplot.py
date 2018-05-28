@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """Usage:
     contactplot.py (atom | residue) <tablefile> <asafile> [--skip-none-contact --size <widthxheight> <outputfile>]
 
