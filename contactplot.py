@@ -15,6 +15,8 @@ import seaborn as sns
 import tempfile
 from collections import OrderedDict
 import os
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 
