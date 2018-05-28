@@ -248,9 +248,8 @@ def plot_contact_atom_bsaasa(tablefile, asafile, output,
 
 
 
-if __name__ == '__main__':
+def contactplot():
     args = docopt(__doc__)
-    print(args)
     size = tuple(int(s) for s in args['--size'].split('x'))
     skip_none_contact = args['--skip-none-contact']
     tablefile = args['<tablefile>']
@@ -263,3 +262,7 @@ if __name__ == '__main__':
         plot_contact_res_bsaasa(tablefile, asafile, output, skip_none_contact, size)
     elif args['atom']:
         plot_contact_atom_bsaasa(tablefile, asafile, output, skip_none_contact, size)
+
+
+if __name__ == '__main__':
+    contactplot()
