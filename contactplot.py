@@ -9,14 +9,14 @@ Options:
 """
 from docopt import docopt
 from Bio.PDB import PDBParser
+import matplotlib as mpl
+mpl.use('Agg')
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import tempfile
 from collections import OrderedDict
 import os
-import matplotlib as mpl
-mpl.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 
