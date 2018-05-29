@@ -244,6 +244,7 @@ def plot_contact_atom_bsaasa(tablefile, asafile, output,
 
 
     ax1.set_ylabel("")
+    iname = df.index.name.split('/')[0]
     plt.suptitle("Buried surface area in structure %s.\n%s"%(structurename, df.index.name), fontsize=20, y=0.92)
     fig.savefig(output, dpi=dpi)
 
