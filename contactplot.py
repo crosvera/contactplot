@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 """Usage:
-    contactplot.py (atom | residue) <tablefile> <asafile> [--skip-none-contact --size <widthxheight> <outputfile>]
+    contactplot.py residue <tablefile> <asafile> [--skip-none-contact --size <widthxheight> <outputfile>]
+    contactplot.py atom  <tablefile> <asafile> [--skip-none-contact --size <widthxheight> <outputfile>]
+    contactplot.py ligand-protein  <tablefile> <asafile> [--skip-none-contact --size <widthxheight> <outputfile>]
 
 Options:
     --size <widthxheight>       Output image size in pixels.
@@ -154,6 +156,66 @@ def get_atom_contact_area(tablefile, skip_none_contact=False):
     return df
 
 
+
+def get_ligand_protein_contact_area(tablefile, skip_none_contact=False):
+    with open(tablefile) as f:
+        l = f.readline()
+        columns = l.strip().split("\t")
+    df = pd.read_csv(tablefile, sep="\t", index_col=0, skipinitialspace=True,
+                     skip_blank_lines=True, usecols=columns)
+
+    #check if protein is at column or index
+    data = {}
+    iname = df.index.name
+    if 'PROTEIN' in df.columns[0]:
+        pivot = 'column'
+        columns = []
+        for col in df.columns:
+            colname = '/'.join(col.split("/")[1:4])
+            try:
+                data[colname] += df[col]
+            except KeyError:
+                data[colname] = df[col]
+                columns.append(colname)
+        df = pd.DataFrame(data)[columns]
+        df.index.name = iname
+
+    elif 'PROTEIN' in df.index[0]:
+        pivot = 'index'
+        columns = df.columns
+        indexes = []
+        for idx in df.index:
+            idxname = '/'.join(idx.split('/')[1:4])
+            try:
+                data[idxname] += df.loc[idx]
+            except KeyError:
+                data[idxname] = df.loc[idx]
+                indexes.append(idxname)
+        df = pd.DataFrame.from_dict(data, orient='index')[columns]
+        indexes.sort(key = lambda e: (int(e.split('/')[2]), e.split('/')[1]))
+        df = df.loc[indexes]
+        df.index.name = iname
+
+
+    if skip_none_contact:
+        columns = df.columns
+        df = df.drop([col for col in columns if df[col].sum() == 0.0], axis=1)
+        indexes = df.index
+        df = df.drop([idx for idx in indexes if df.loc[idx].sum() == 0.0])
+
+    rename = lambda a: "{}/{}/{}/{}/{}".format(*a.split("/"))
+    if pivot != 'column':
+        df.columns = [rename(c) for c in df.columns]
+
+    if pivot != 'index':
+        iname = df.index.name
+        df.index = [rename(i) for i in df.index]
+        df.index.name = iname
+    
+    return df, pivot
+
+
+
 def get_atom_asa(asafile):
     parser = PDBParser()
     structure_name = 'structure'
@@ -210,7 +272,7 @@ def plot_contact_atom_bsaasa(tablefile, asafile, output,
     ax2 = plt.subplot2grid(inchsize, (inchsize[0]-1,1), colspan=inchsize[0]-2, rowspan=1)
     ax3 = plt.subplot2grid(inchsize, (0,0), colspan=1, rowspan=inchsize[1]-1)
     ax4 = plt.subplot2grid(inchsize, (0,inchsize[1]-1), colspan=1, rowspan=inchsize[1]-1)
-    
+
     #cbar formatter:
     cbar_fmt = mtick.FuncFormatter(lambda x, pos: "{} Å²".format(x))
 
@@ -251,6 +313,84 @@ def plot_contact_atom_bsaasa(tablefile, asafile, output,
 
 
 
+def plot_contact_ligand_protein(tablefile, asafile, output,
+                                skip_none_contact=True, size=(1920,1920), dpi=72):
+    df, pivot = get_ligand_protein_contact_area(tablefile, skip_none_contact)
+
+    atom_bsa_asa_a, atom_bsa_asa_b = get_atom_bsa_vs_asa(tablefile, asafile,
+                                                         skip_none_contact)
+
+    columns = df.columns
+    indexes = df.index
+
+    structurename = tablefile.split(os.sep)[-1].split('.')[0]
+    
+    inchsize = (int(size[0]/dpi), int(size[1]/dpi))
+    fig = plt.figure(figsize=inchsize)
+
+
+
+    #cbar formatter:
+    cbar_fmt = mtick.FuncFormatter(lambda x, pos: "{} Å²".format(x))
+
+
+    if pivot == 'index':
+        ax1 = plt.subplot2grid(inchsize, (0,1), colspan=inchsize[0]-2, rowspan=inchsize[1]-1)
+        ax2 = plt.subplot2grid(inchsize, (inchsize[0]-1,1), colspan=inchsize[0]-2, rowspan=1)
+        #ax3 = plt.subplot2grid(inchsize, (0,0), colspan=1, rowspan=inchsize[1]-1)
+        ax4 = plt.subplot2grid(inchsize, (0,inchsize[1]-1), colspan=1, rowspan=inchsize[1]-1)
+
+        sns.heatmap(df, ax=ax1, annot=False, xticklabels=False, yticklabels=True,
+                    cmap='YlOrRd', cbar_ax=ax4, cbar_kws=dict(format=cbar_fmt))
+        ax1.set_yticklabels(df.index, rotation=0)
+
+        sns.barplot(x=list(df.columns), y=list(atom_bsa_asa_a[e]*100 for e in df.columns),
+                    color='#005599', ax=ax2, label="BSA/ASA %")
+        ax2.set_xticklabels(list(df.columns), rotation=90)
+        ax2.set_ylim([0, 100])
+        ax2.set_yticks([])
+        ax2t = ax2.twinx()
+        ax2t.set_yticks([0, 100])
+        ax2t.set_ylim([0, 100])
+        ax2t.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.0f%%'))
+
+    if pivot == 'column':
+        ax1 = plt.subplot2grid(inchsize, (0,1), colspan=inchsize[0]-2, rowspan=inchsize[1]-1)
+        #ax2 = plt.subplot2grid(inchsize, (inchsize[0]-1,1), colspan=inchsize[0]-2, rowspan=1)
+        ax3 = plt.subplot2grid(inchsize, (0,0), colspan=1, rowspan=inchsize[1]-1)
+        ax4 = plt.subplot2grid(inchsize, (0,inchsize[1]-1), colspan=1, rowspan=inchsize[1]-1)
+
+        sns.heatmap(df, ax=ax1, annot=False, xticklabels=True, yticklabels=False,
+                    cmap='YlOrRd', cbar_ax=ax4, cbar_kws=dict(format=cbar_fmt))
+        ax1.set_xticklabels(df.columns, rotation=90)
+    
+        sns.barplot(y=list(df.index), x=list(atom_bsa_asa_b[e]*100 for e in df.index), color='#005599',
+                    ax=ax3, label="BSA/ASA %")
+        ax3.set_yticklabels(df.index)
+        ax3.set_xlim([0, 100])
+        ax3.set_xticks([])
+        ax3t = ax3.twiny()
+        ax3t.set_xticks([0, 100])
+        ax3t.set_xlim([0, 100])
+        ax3t.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.0f%%'))
+
+
+    #set cbar outline 
+    ax4.set_frame_on(True)
+
+    X, Y = np.meshgrid(np.arange(0.5, len(columns)),
+                       np.arange(0.5, len(indexes)))
+    ax1.scatter(X, Y, color='gray', s=3)
+    
+    legend = fig.legend(loc=(0.09,0.11))
+
+    ax1.set_ylabel("")
+    iname = df.index.name.split('/')[0]
+    plt.suptitle("Buried surface area in structure %s.\n%s"%(structurename, iname), fontsize=20, y=0.92)
+    fig.savefig(output, dpi=dpi)
+
+
+
 
 
 
@@ -268,6 +408,8 @@ def contactplot():
         plot_contact_res_bsaasa(tablefile, asafile, output, skip_none_contact, size)
     elif args['atom']:
         plot_contact_atom_bsaasa(tablefile, asafile, output, skip_none_contact, size)
+    elif args['ligand-protein']:
+        plot_contact_ligand_protein(tablefile, asafile, output, skip_none_contact, size)
 
 
 if __name__ == '__main__':
