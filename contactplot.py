@@ -95,7 +95,7 @@ def plot_contact_res_bsaasa(tablefile, asafile, output,
     ax4 = plt.subplot2grid(inchsize, (0,inchsize[1]-1), colspan=1, rowspan=inchsize[1]-1)
     
     #cbar formatter:
-    cbar_fmt = mtick.FuncFormatter(lambda x, pos: "{} Å²".format(x))
+    cbar_fmt = mtick.FuncFormatter(lambda x, pos: "{} $\AA^2$".format(x))
 
     sns.heatmap(df, ax=ax1, annot=False, xticklabels=False, yticklabels=False,
                 cmap='YlOrRd', cbar_ax=ax4, cbar_kws=dict(format=cbar_fmt))
@@ -254,6 +254,42 @@ def get_atom_bsa_vs_asa(tablefile, asafile, skip_none_contact=True):
     
     return atom_bsa_asa_a, atom_bsa_asa_b
 
+
+def get_ligand_protein_bsa_vs_asa(tablefile, asafile, skip_none_contact=True):
+    contacts_df, pivot = get_ligand_protein_contact_area(tablefile, skip_none_contact)
+    ligand_bsa = OrderedDict()
+    protein_bsa = OrderedDict()
+    total_ligand_asa = {}
+    total_protein_asa = {}
+
+    atom_asa = get_atom_asa(asafile)
+    res_asa = get_res_asa(asafile)
+
+    if pivot == 'column':
+        for res in contacts_df.columns:
+            protein_bsa[res] = contacts_df[res].sum()
+        for atom in contacts_df.index:
+            ligand_bsa[atom] = contacts_df.loc[atom].sum()
+    elif pivot == 'index':
+        for res in contacts_df.index:
+            protein_bsa[res] = contacts_df.loc[res].sum()
+        for atom in contacts_df.columns:
+            ligand_bsa[atom] = contacts_df[atom].sum()
+
+    for res in protein_bsa:
+        total_protein_asa[res] = res_asa[res] + protein_bsa[res]
+    for atom in ligand_bsa:
+        total_ligand_asa[atom] = atom_asa[atom] + ligand_bsa[atom]
+
+    protein_bsa_asa = OrderedDict((res, float(protein_bsa[res]/total_protein_asa[res]))\
+                                  for res in protein_bsa)
+    ligand_bsa_asa = OrderedDict((atom, float(ligand_bsa[atom]/total_ligand_asa[atom]))\
+                                 for atom in ligand_bsa)
+
+    return protein_bsa_asa, ligand_bsa_asa
+
+
+
 def plot_contact_atom_bsaasa(tablefile, asafile, output,
                              skip_none_contact=True, size=(1920,1920), dpi=72):
     atom_bsa_asa_a, atom_bsa_asa_b = get_atom_bsa_vs_asa(tablefile, asafile,
@@ -274,7 +310,7 @@ def plot_contact_atom_bsaasa(tablefile, asafile, output,
     ax4 = plt.subplot2grid(inchsize, (0,inchsize[1]-1), colspan=1, rowspan=inchsize[1]-1)
 
     #cbar formatter:
-    cbar_fmt = mtick.FuncFormatter(lambda x, pos: "{} Å²".format(x))
+    cbar_fmt = mtick.FuncFormatter(lambda x, pos: "{} $\AA^2$".format(x))
 
     sns.heatmap(df, ax=ax1, annot=False, xticklabels=False, yticklabels=False,
                 cmap='YlOrRd', cbar_ax=ax4, cbar_kws=dict(format=cbar_fmt))
@@ -317,8 +353,9 @@ def plot_contact_ligand_protein(tablefile, asafile, output,
                                 skip_none_contact=True, size=(1920,1920), dpi=72):
     df, pivot = get_ligand_protein_contact_area(tablefile, skip_none_contact)
 
-    atom_bsa_asa_a, atom_bsa_asa_b = get_atom_bsa_vs_asa(tablefile, asafile,
-                                                         skip_none_contact)
+    protein_bsa_asa, ligand_bsa_asa = get_ligand_protein_bsa_vs_asa(tablefile,
+                                                                    asafile,
+                                                                    skip_none_contact)
 
     columns = df.columns
     indexes = df.index
@@ -331,48 +368,33 @@ def plot_contact_ligand_protein(tablefile, asafile, output,
 
 
     #cbar formatter:
-    cbar_fmt = mtick.FuncFormatter(lambda x, pos: "{} Å²".format(x))
+    cbar_fmt = mtick.FuncFormatter(lambda x, pos: "{} $\AA^2$".format(x))
 
+
+    ax1 = plt.subplot2grid(inchsize, (0,1), colspan=inchsize[0]-2, rowspan=inchsize[1]-1)
+    ax2 = plt.subplot2grid(inchsize, (inchsize[0]-1,1), colspan=inchsize[0]-2, rowspan=1)
+    #ax3 = plt.subplot2grid(inchsize, (0,0), colspan=1, rowspan=inchsize[1]-1)
+    ax4 = plt.subplot2grid(inchsize, (0,inchsize[1]-1), colspan=1, rowspan=inchsize[1]-1)
+
+    sns.heatmap(df, ax=ax1, annot=False, xticklabels=False, yticklabels=True,
+                cmap='YlOrRd', cbar_ax=ax4, cbar_kws=dict(format=cbar_fmt))
+    ax1.set_yticklabels(df.index, rotation=0)
 
     if pivot == 'index':
-        ax1 = plt.subplot2grid(inchsize, (0,1), colspan=inchsize[0]-2, rowspan=inchsize[1]-1)
-        ax2 = plt.subplot2grid(inchsize, (inchsize[0]-1,1), colspan=inchsize[0]-2, rowspan=1)
-        #ax3 = plt.subplot2grid(inchsize, (0,0), colspan=1, rowspan=inchsize[1]-1)
-        ax4 = plt.subplot2grid(inchsize, (0,inchsize[1]-1), colspan=1, rowspan=inchsize[1]-1)
-
-        sns.heatmap(df, ax=ax1, annot=False, xticklabels=False, yticklabels=True,
-                    cmap='YlOrRd', cbar_ax=ax4, cbar_kws=dict(format=cbar_fmt))
-        ax1.set_yticklabels(df.index, rotation=0)
-
-        sns.barplot(x=list(df.columns), y=list(atom_bsa_asa_a[e]*100 for e in df.columns),
+        sns.barplot(x=list(df.columns), y=list(ligand_bsa_asa[e]*100 for e in df.columns),
                     color='#005599', ax=ax2, label="BSA/ASA %")
-        ax2.set_xticklabels(list(df.columns), rotation=90)
-        ax2.set_ylim([0, 100])
-        ax2.set_yticks([])
-        ax2t = ax2.twinx()
-        ax2t.set_yticks([0, 100])
-        ax2t.set_ylim([0, 100])
-        ax2t.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.0f%%'))
+    elif pivot == 'column':
+        sns.barplot(x=list(df.columns), y=list(protein_bsa_asa[e]*100 for e in df.columns),
+                    color='#005599', ax=ax2, label="BSA/ASA %")
 
-    if pivot == 'column':
-        ax1 = plt.subplot2grid(inchsize, (0,1), colspan=inchsize[0]-2, rowspan=inchsize[1]-1)
-        #ax2 = plt.subplot2grid(inchsize, (inchsize[0]-1,1), colspan=inchsize[0]-2, rowspan=1)
-        ax3 = plt.subplot2grid(inchsize, (0,0), colspan=1, rowspan=inchsize[1]-1)
-        ax4 = plt.subplot2grid(inchsize, (0,inchsize[1]-1), colspan=1, rowspan=inchsize[1]-1)
+    ax2.set_xticklabels(list(df.columns), rotation=90)
+    ax2.set_ylim([0, 100])
+    ax2.set_yticks([])
+    ax2t = ax2.twinx()
+    ax2t.set_yticks([0, 100])
+    ax2t.set_ylim([0, 100])
+    ax2t.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.0f%%'))
 
-        sns.heatmap(df, ax=ax1, annot=False, xticklabels=True, yticklabels=False,
-                    cmap='YlOrRd', cbar_ax=ax4, cbar_kws=dict(format=cbar_fmt))
-        ax1.set_xticklabels(df.columns, rotation=90)
-    
-        sns.barplot(y=list(df.index), x=list(atom_bsa_asa_b[e]*100 for e in df.index), color='#005599',
-                    ax=ax3, label="BSA/ASA %")
-        ax3.set_yticklabels(df.index)
-        ax3.set_xlim([0, 100])
-        ax3.set_xticks([])
-        ax3t = ax3.twiny()
-        ax3t.set_xticks([0, 100])
-        ax3t.set_xlim([0, 100])
-        ax3t.xaxis.set_major_formatter(mtick.FormatStrFormatter('%.0f%%'))
 
 
     #set cbar outline 
