@@ -108,7 +108,8 @@ def plot_contact_res_bsaasa(tablefile, asafile, output,
 
     sns.barplot(x=list(df.columns), y=list(res_bsa_asa_a[e]*100 for e in df.columns),
                 color='#005599', ax=ax2, label="BSA/ASA %")
-    ax2.set_xticklabels(list(df.columns), rotation=90)
+    ax4.tick_params(labelsize='x-large')
+    ax2.set_xticklabels(list(df.columns), rotation=90, size='x-large')
     ax2.set_ylim([0, 100])
     ax2.set_yticks([])
     ax2t = ax2.twinx()
@@ -118,7 +119,7 @@ def plot_contact_res_bsaasa(tablefile, asafile, output,
     legend = fig.legend(loc=(0.09,0.11))
     
     sns.barplot(y=list(df.index), x=list(res_bsa_asa_b[e]*100 for e in df.index), color='#005599', ax=ax3)
-    ax3.set_yticklabels(df.index)
+    ax3.set_yticklabels(df.index, size='x-large')
     ax3.set_xlim([0, 100])
     ax3.set_xticks([])
     ax3t = ax3.twiny()
@@ -129,7 +130,7 @@ def plot_contact_res_bsaasa(tablefile, asafile, output,
 
     ax1.set_ylabel("")
     iname = df.index.name.split('/')[0]
-    plt.suptitle("Buried surface area in structure %s.\n%s"%(structurename, iname), fontsize=20, y=0.92)
+    plt.suptitle("Buried surface area in structure %s.\n%s"%(structurename, iname), size='xx-large', y=0.92)
     fig.savefig(output, dpi=dpi)
 
 
@@ -286,7 +287,7 @@ def get_ligand_protein_bsa_vs_asa(tablefile, asafile, skip_none_contact=True):
     ligand_bsa_asa = OrderedDict((atom, float(ligand_bsa[atom]/total_ligand_asa[atom]))\
                                  for atom in ligand_bsa)
 
-    return protein_bsa_asa, ligand_bsa_asa
+    return ligand_bsa_asa, protein_bsa_asa
 
 
 
@@ -316,6 +317,7 @@ def plot_contact_atom_bsaasa(tablefile, asafile, output,
                 cmap='YlOrRd', cbar_ax=ax4, cbar_kws=dict(format=cbar_fmt))
     #set cbar outline 
     ax4.set_frame_on(True)
+    ax4.tick_params(labelsize='x-large')
 
     X, Y = np.meshgrid(np.arange(0.5, len(columns)),
                        np.arange(0.5, len(indexes)))
@@ -323,7 +325,7 @@ def plot_contact_atom_bsaasa(tablefile, asafile, output,
 
     sns.barplot(x=list(df.columns), y=list(atom_bsa_asa_a[e]*100 for e in df.columns),
                 color='#005599', ax=ax2, label="BSA/ASA %")
-    ax2.set_xticklabels(list(df.columns), rotation=90)
+    ax2.set_xticklabels(list(df.columns), rotation=90, size='x-large')
     ax2.set_ylim([0, 100])
     ax2.set_yticks([])
     ax2t = ax2.twinx()
@@ -333,7 +335,7 @@ def plot_contact_atom_bsaasa(tablefile, asafile, output,
     legend = fig.legend(loc=(0.09,0.11))
     
     sns.barplot(y=list(df.index), x=list(atom_bsa_asa_b[e]*100 for e in df.index), color='#005599', ax=ax3)
-    ax3.set_yticklabels(df.index)
+    ax3.set_yticklabels(df.index, size='x-large')
     ax3.set_xlim([0, 100])
     ax3.set_xticks([])
     ax3t = ax3.twiny()
@@ -344,7 +346,7 @@ def plot_contact_atom_bsaasa(tablefile, asafile, output,
 
     ax1.set_ylabel("")
     iname = df.index.name.split('/')[0]
-    plt.suptitle("Buried surface area in structure %s.\n%s"%(structurename, iname), fontsize=20, y=0.92)
+    plt.suptitle("Buried surface area in structure %s.\n%s"%(structurename, iname), fontsize='xx-large', y=0.92)
     fig.savefig(output, dpi=dpi)
 
 
@@ -353,7 +355,7 @@ def plot_contact_ligand_protein(tablefile, asafile, output,
                                 skip_none_contact=True, size=(1920,1920), dpi=72):
     df, pivot = get_ligand_protein_contact_area(tablefile, skip_none_contact)
 
-    protein_bsa_asa, ligand_bsa_asa = get_ligand_protein_bsa_vs_asa(tablefile,
+    ligand_bsa_asa, protein_bsa_asa = get_ligand_protein_bsa_vs_asa(tablefile,
                                                                     asafile,
                                                                     skip_none_contact)
 
@@ -378,7 +380,8 @@ def plot_contact_ligand_protein(tablefile, asafile, output,
 
     sns.heatmap(df, ax=ax1, annot=False, xticklabels=False, yticklabels=True,
                 cmap='YlOrRd', cbar_ax=ax4, cbar_kws=dict(format=cbar_fmt))
-    ax1.set_yticklabels(df.index, rotation=0)
+    ax1.set_yticklabels(df.index, rotation=0, size='x-large')
+    ax4.tick_params(labelsize='x-large')
 
     if pivot == 'index':
         sns.barplot(x=list(df.columns), y=list(ligand_bsa_asa[e]*100 for e in df.columns),
@@ -387,7 +390,7 @@ def plot_contact_ligand_protein(tablefile, asafile, output,
         sns.barplot(x=list(df.columns), y=list(protein_bsa_asa[e]*100 for e in df.columns),
                     color='#005599', ax=ax2, label="BSA/ASA %")
 
-    ax2.set_xticklabels(list(df.columns), rotation=90)
+    ax2.set_xticklabels(list(df.columns), rotation=90, size='x-large')
     ax2.set_ylim([0, 100])
     ax2.set_yticks([])
     ax2t = ax2.twinx()
@@ -408,7 +411,7 @@ def plot_contact_ligand_protein(tablefile, asafile, output,
 
     ax1.set_ylabel("")
     iname = df.index.name.split('/')[0]
-    plt.suptitle("Buried surface area in structure %s.\n%s"%(structurename, iname), fontsize=20, y=0.92)
+    plt.suptitle("Buried surface area in structure %s.\n%s"%(structurename, iname), size='xx-large', y=0.92)
     fig.savefig(output, dpi=dpi)
 
 
