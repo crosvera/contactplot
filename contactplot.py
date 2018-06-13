@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """Usage:
     contactplot.py residue <tablefile> <asafile> [--skip-none-contact --size <widthxheight> <outputfile>]
