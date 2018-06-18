@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '0.5.3'
+version = '0.6'
 
 setup(
     name="contactplot",
@@ -12,10 +12,9 @@ setup(
     py_modules=[],
     include_package_data=True,
     install_requires=[
-        'matplotlib',
+        'matplotlib>=2.0',
         'numpy',
         'pandas',
-        'biopython',
         'docopt',
         'seaborn'
     ],
