@@ -204,7 +204,7 @@ def plot_contact_ligand_protein(tablefile, atmasafile, output,
                        np.arange(0.5, len(indexes)))
     ax1.scatter(X, Y, color='gray', s=3)
     
-    legend = fig.legend(loc=(0.09,0.11))
+    legend = fig.legend(loc='lower left')
 
     ax1.set_ylabel("")
     iname = df.index.name.split('/')[0]
@@ -289,7 +289,7 @@ def plot_contact_res_bsaasa(tablefile, atmasafile, output,
                        np.arange(0.5, len(indexes)))
     ax1.scatter(X, Y, color='gray', s=3)
     
-    legend = fig.legend(loc=(0.09,0.11))
+    legend = fig.legend(loc='lower left')
 
     ax1.set_ylabel("")
     iname = df.index.name.split('/')[0]
@@ -375,7 +375,7 @@ def plot_contact_atom_bsaasa(tablefile, atmasafile, output,
                        np.arange(0.5, len(indexes)))
     ax1.scatter(X, Y, color='gray', s=3)
     
-    legend = fig.legend(loc=(0.09,0.11))
+    legend = fig.legend(loc='lower left')
 
     ax1.set_ylabel("")
     iname = df.index.name.split('/')[0]
