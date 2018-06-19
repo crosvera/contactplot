@@ -403,23 +403,26 @@ def contactplot():
     if not output:
         output = os.path.splitext(tablefile)[0] + '.png'
 
-    if check_tablefile_type(tablefile)[1] == 'matrix':
-        print ("Table file type 'matrix' still not supported.")
+    if atmasafile.split('.')[-1] != 'atmasa':
+        print("ERROR: {} is not the .atmasa file.".format(atmasafile))
         sys.exit(-1)
 
     if args['residue']:
         if check_tablefile_type(tablefile)[0] != 'by_res':
-            print ("Incorrect tablefile, you should use the *.by_res.tsv file.")
+            print ("ERROR: Incorrect tablefile, you should use the *.by_res.tsv file.")
             sys.exit(-1)
         plot_contact_res_bsaasa(tablefile, atmasafile, output, skip_none_contact, size)
     elif args['atom']:
         if check_tablefile_type(tablefile)[0] != 'by_atom':
-            print ("Incorrect tablefile, you should use the *.by_atom.tsv file.")
+            print ("ERROR: Incorrect tablefile, you should use the *.by_atom.tsv file.")
             sys.exit(-1)
         plot_contact_atom_bsaasa(tablefile, atmasafile, output, skip_none_contact, size)
     elif args['ligand-protein']:
         if check_tablefile_type(tablefile)[0] != 'by_atom':
-            print ("Incorrect tablefile, you should use the *.by_atom.tsv file.")
+            print ("ERROR: Incorrect tablefile, you should use the *.by_atom.tsv file.")
+            sys.exit(-1)
+        if check_tablefile_type(tablefile)[1] == 'matrix':
+            print ("ERROR: Table file type 'matrix' still not supported in this mode.")
             sys.exit(-1)
         plot_contact_ligand_protein(tablefile, atmasafile, output, skip_none_contact, size)
 
