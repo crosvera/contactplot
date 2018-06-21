@@ -297,7 +297,7 @@ def plot_contact_res_bsaasa(tablefile, atmasafile, output,
     fig.savefig(output, dpi=dpi)
 
 
-def get_atom_bsa_vs_asa(tablefile, asafile, skip_none_contact=True):
+def get_atom_bsa_vs_asa(tablefile, atmasafile, skip_none_contact=True):
     contacts_df = get_atom_contact_area(tablefile, skip_none_contact)
     atom_bsa_asa_a = {}
     atom_bsa_asa_b = {}
