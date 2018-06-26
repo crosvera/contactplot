@@ -71,7 +71,7 @@ def get_ligand_protein_contact_area(tablefile, skip_none_contact=False):
                      skip_blank_lines=True, usecols=columns)
 
     #check if protein is at column or index
-    data = {}
+    data = OrderedDict()
     iname = df.index.name
     if 'PROTEIN' in df.columns[0]:
         pivot = 'column'
@@ -90,6 +90,8 @@ def get_ligand_protein_contact_area(tablefile, skip_none_contact=False):
         pivot = 'index'
         columns = df.columns
         indexes = []
+        print(df)
+        print(df.index)
         for idx in df.index:
             idxname = '/'.join(idx.split('/')[1:4])
             try:
@@ -98,9 +100,11 @@ def get_ligand_protein_contact_area(tablefile, skip_none_contact=False):
                 data[idxname] = df.loc[idx]
                 indexes.append(idxname)
         df = pd.DataFrame.from_dict(data, orient='index')[columns]
-        indexes.sort(key = lambda e: (int(e.split('/')[2]), e.split('/')[1]))
+        print (indexes)
+        #indexes.sort(key = lambda e: (e.split('/')[1], e.split('/')[2]))
         df = df.loc[indexes]
         df.index.name = iname
+        print(df.index)
 
 
     if skip_none_contact:
@@ -123,24 +127,50 @@ def get_ligand_protein_contact_area(tablefile, skip_none_contact=False):
 
 def get_ligand_protein_bsa_vs_asa(tablefile, atmasafile, skip_none_contact=True):
     contacts_df, pivot = get_ligand_protein_contact_area(tablefile, skip_none_contact)
-    ligand_bsa_asa = {}
-    protein_bsa_asa = {}
+    ligand_bsa_asa = OrderedDict()
+    protein_bsa_asa = OrderedDict()
     
     atmasa = pd.read_csv(atmasafile, sep='\t')
     atmasa_by_id = atmasa.set_index('ID')
-    atom_total_asa = {atnum: atmasa_by_id['total_ASA'][atnum] for atnum in atmasa_by_id.index}
-    atmasa_by_resnum = atmasa.groupby(['resnum']).sum()
-    res_total_asa = {resnum: atmasa_by_resnum['total_ASA'][resnum] for resnum in atmasa_by_resnum.index}
+    atom_total_asa = {str(atnum): atmasa_by_id['total_ASA'][atnum]\
+                      for atnum in atmasa_by_id.index}
+    atmasa_by_resnum = atmasa.groupby(['chain', 'resnum']).sum()
+    res_total_asa = {resnum: atmasa_by_resnum['total_ASA'][resnum]\
+                     for resnum in atmasa_by_resnum.index}
     
+    protein_bsa = {}
+    ligand_bsa = {}
     if pivot == 'column':
-        protein_bsa = {int(res.split('/')[-1]):contacts_df[res].sum() for res in contacts_df.columns}
-        ligand_bsa = {int(atm.split('/')[-1]):contacts_df.loc[atm].sum() for atm in contacts_df.index}
+        for r in contacts_df.columns:
+            rr = r.split('/')
+            res = (rr[1], rr[2])
+            protein_bsa[res] = contacts_df[r].sum()
+        for a in contacts_df.index:
+            aa = a.split('/')
+            ligand_bsa[aa[-1]] = contacts_df.loc[a].sum()
+            
+        #protein_bsa = {(res.split('/')[-1], contacts_df[res].sum())\
+        #               for res in contacts_df.columns}
+        #ligand_bsa = {(atm.split('/')[-1], contacts_df.loc[atm].sum())\
+        #              for atm in contacts_df.index}
     elif pivot == 'index':
-        protein_bsa = {int(res.split('/')[-1]):contacts_df.loc[res].sum() for res in contacts_df.index}
-        ligand_bsa = {int(atm.split('/')[-1]):contacts_df[atm].sum() for atm in contacts_df.columns}
+        for r in contacts_df.index:
+            rr = r.split('/')
+            res = (rr[1], rr[2])
+            protein_bsa[res] = contacts_df.loc[r].sum()
+        for a in contacts_df.columns:
+            aa = a.split('/')
+            ligand_bsa[aa[-1]] = contacts_df[a].sum()
+         
+        #protein_bsa = {(res.split('/')[-1],contacts_df.loc[res].sum())\
+        #               for res in contacts_df.index}
+        #ligand_bsa = {(atm.split('/')[-1],contacts_df[atm].sum())\
+        #              for atm in contacts_df.columns}
     
-    ligand_total_asa = {atm: ligand_bsa[atm]+atom_total_asa[atm] for atm in ligand_bsa}
-    protein_total_asa = {resnum: protein_bsa[resnum]+res_total_asa[resnum] for resnum in protein_bsa}
+    ligand_total_asa = {atm: ligand_bsa[atm]+atom_total_asa[atm]\
+                        for atm in ligand_bsa}
+    protein_total_asa = {res: protein_bsa[res]+res_total_asa[res]\
+                         for res in protein_bsa}
     
     for atm in ligand_total_asa:
         ligand_bsa_asa[atm] = ligand_bsa[atm] / ligand_total_asa[atm]
@@ -181,10 +211,14 @@ def plot_contact_ligand_protein(tablefile, atmasafile, output,
     ax4.tick_params(labelsize='x-large')
 
     if pivot == 'index':
-        sns.barplot(x=list(df.columns), y=list(ligand_bsa_asa[int(e.split('/')[-1])]*100 for e in df.columns),
+        sns.barplot(x=list(df.columns), y=list(ligand_bsa_asa[e.split('/')[-1]]*100 for e in df.columns),
                     color='#005599', ax=ax2, label="BSA/ASA %")
     elif pivot == 'column':
-        sns.barplot(x=list(df.columns), y=list(protein_bsa_asa[int(e.split('/')[-1])]*100 for e in df.columns),
+        cols = []
+        for c in df.columns:
+            cc = c.split('/')
+            cols.append( (cc[1], cc[2]) )
+        sns.barplot(x=list(df.columns), y=list(protein_bsa_asa[c]*100 for c in cols),
                     color='#005599', ax=ax2, label="BSA/ASA %")
 
     ax2.set_xticklabels(list(df.columns), rotation=90, size='x-large')
@@ -219,13 +253,13 @@ def get_res_bsa_vs_asa(tablefile, atmasafile, skip_none_contact=True):
     
     atmasa = pd.read_csv(atmasafile, sep='\t')
     atmasa_by_id = atmasa.set_index('ID')
-    atom_total_asa = {atnum: atmasa_by_id['total_ASA'][atnum] for atnum in atmasa_by_id.index}
+    atom_total_asa = {str(atnum): atmasa_by_id['total_ASA'][atnum] for atnum in atmasa_by_id.index}
     atmasa_by_resnum = atmasa.groupby(['resnum']).sum()
-    res_total_asa = {resnum: atmasa_by_resnum['total_ASA'][resnum] for resnum in atmasa_by_resnum.index}
+    res_total_asa = {str(resnum): atmasa_by_resnum['total_ASA'][resnum] for resnum in atmasa_by_resnum.index}
     
-    res_bsa_a = {int(res.split('/')[-1]):contacts_df[res].sum()\
+    res_bsa_a = {res.split('/')[-1]:contacts_df[res].sum()\
                  for res in contacts_df.columns}
-    res_bsa_b = {int(res.split('/')[-1]):contacts_df.loc[res].sum()\
+    res_bsa_b = {res.split('/')[-1]:contacts_df.loc[res].sum()\
                  for res in contacts_df.index}
     
     res_total_asa_a = {resnum: res_bsa_a[resnum]+res_total_asa[resnum] for resnum in res_bsa_a}
@@ -269,7 +303,7 @@ def plot_contact_res_bsaasa(tablefile, atmasafile, output,
     ax1.set_yticklabels(df.index, rotation=0, size='x-large')
     ax4.tick_params(labelsize='x-large')
 
-    sns.barplot(x=list(df.columns), y=list(res_bsa_asa_a[int(e.split('/')[-1])]*100 for e in df.columns),
+    sns.barplot(x=list(df.columns), y=list(res_bsa_asa_a[e.split('/')[-1]]*100 for e in df.columns),
                 color='#005599', ax=ax2, label="BSA/ASA %")
 
     ax2.set_xticklabels(list(df.columns), rotation=90, size='x-large')
@@ -304,13 +338,13 @@ def get_atom_bsa_vs_asa(tablefile, atmasafile, skip_none_contact=True):
     
     atmasa = pd.read_csv(atmasafile, sep='\t')
     atmasa_by_id = atmasa.set_index('ID')
-    atom_total_asa = {atnum: atmasa_by_id['total_ASA'][atnum] for atnum in atmasa_by_id.index}
+    atom_total_asa = {str(atnum): atmasa_by_id['total_ASA'][atnum] for atnum in atmasa_by_id.index}
     atmasa_by_resnum = atmasa.groupby(['resnum']).sum()
-    res_total_asa = {resnum: atmasa_by_resnum['total_ASA'][resnum] for resnum in atmasa_by_resnum.index}
+    res_total_asa = {str(resnum): atmasa_by_resnum['total_ASA'][resnum] for resnum in atmasa_by_resnum.index}
     
-    atom_bsa_a = {int(atom.split('/')[-1]):contacts_df[atom].sum()\
+    atom_bsa_a = {atom.split('/')[-1]:contacts_df[atom].sum()\
                  for atom in contacts_df.columns}
-    atom_bsa_b = {int(atom.split('/')[-1]):contacts_df.loc[atom].sum()\
+    atom_bsa_b = {atom.split('/')[-1]:contacts_df.loc[atom].sum()\
                  for atom in contacts_df.index}
     
     atom_total_asa_a = {atom: atom_bsa_a[atom]+atom_total_asa[atom] for atom in atom_bsa_a}
@@ -355,7 +389,7 @@ def plot_contact_atom_bsaasa(tablefile, atmasafile, output,
     ax1.set_yticklabels(df.index, rotation=0, size='x-large')
     ax4.tick_params(labelsize='x-large')
 
-    sns.barplot(x=list(df.columns), y=list(atom_bsa_asa_a[int(e.split('/')[-1])]*100 for e in df.columns),
+    sns.barplot(x=list(df.columns), y=list(atom_bsa_asa_a[e.split('/')[-1]]*100 for e in df.columns),
                 color='#005599', ax=ax2, label="BSA/ASA %")
 
     ax2.set_xticklabels(list(df.columns), rotation=90, size='x-large')
