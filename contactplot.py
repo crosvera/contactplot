@@ -90,8 +90,6 @@ def get_ligand_protein_contact_area(tablefile, skip_none_contact=False):
         pivot = 'index'
         columns = df.columns
         indexes = []
-        print(df)
-        print(df.index)
         for idx in df.index:
             idxname = '/'.join(idx.split('/')[1:4])
             try:
@@ -100,11 +98,9 @@ def get_ligand_protein_contact_area(tablefile, skip_none_contact=False):
                 data[idxname] = df.loc[idx]
                 indexes.append(idxname)
         df = pd.DataFrame.from_dict(data, orient='index')[columns]
-        print (indexes)
         #indexes.sort(key = lambda e: (e.split('/')[1], e.split('/')[2]))
         df = df.loc[indexes]
         df.index.name = iname
-        print(df.index)
 
 
     if skip_none_contact:
@@ -131,6 +127,7 @@ def get_ligand_protein_bsa_vs_asa(tablefile, atmasafile, skip_none_contact=True)
     protein_bsa_asa = OrderedDict()
     
     atmasa = pd.read_csv(atmasafile, sep='\t')
+    atmasa['resnum'] = atmasa['resnum'].astype(str)
     atmasa_by_id = atmasa.set_index('ID')
     atom_total_asa = {str(atnum): atmasa_by_id['total_ASA'][atnum]\
                       for atnum in atmasa_by_id.index}
