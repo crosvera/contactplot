@@ -320,7 +320,7 @@ def plot_contact_res_bsaasa(tablefile, atmasafile, output,
     for c in df.columns:
         cc = c.split('/')
         cols.append( (cc[1], cc[2]) )
-    sns.barplot(x=list(df.columns), y=list(res_bsa_asa_a[c]]*100 for c in cols),
+    sns.barplot(x=list(df.columns), y=[res_bsa_asa_a[c]*100 for c in cols],
                 color='#005599', ax=ax2, label="BSA/ASA %")
 
     ax2.set_xticklabels(list(df.columns), rotation=90, size='x-large')
