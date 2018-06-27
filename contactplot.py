@@ -225,7 +225,7 @@ def plot_contact_ligand_protein(tablefile, atmasafile, output,
     inchsize = (int(size[0]/dpi), int(size[1]/dpi))
     #print(inchsize)
     size = max(fig_weight_in, fig_height_in)
-    inchsize = (ceil(size), ceil(size))
+    inchsize = (int(ceil(size)), int(ceil(size)))
     #print(inchsize)
 
 
@@ -384,7 +384,7 @@ def plot_contact_res_bsaasa(tablefile, atmasafile, output,
     inchsize = (int(size[0]/dpi), int(size[1]/dpi))
     #print(inchsize)
     size = max(fig_weight_in, fig_height_in)
-    inchsize = (ceil(size), ceil(size))
+    inchsize = (int(ceil(size)), int(ceil(size)))
     #print(inchsize)
 
 
