@@ -248,19 +248,35 @@ def get_res_bsa_vs_asa(tablefile, atmasafile, skip_none_contact=True):
     res_bsa_asa_a = {}
     res_bsa_asa_b = {}
     
+
+
     atmasa = pd.read_csv(atmasafile, sep='\t')
+    atmasa['resnum'] = atmasa['resnum'].astype(str)
     atmasa_by_id = atmasa.set_index('ID')
-    atom_total_asa = {str(atnum): atmasa_by_id['total_ASA'][atnum] for atnum in atmasa_by_id.index}
-    atmasa_by_resnum = atmasa.groupby(['resnum']).sum()
-    res_total_asa = {str(resnum): atmasa_by_resnum['total_ASA'][resnum] for resnum in atmasa_by_resnum.index}
+    atom_total_asa = {str(atnum): atmasa_by_id['total_ASA'][atnum]\
+                      for atnum in atmasa_by_id.index}
+    atmasa_by_resnum = atmasa.groupby(['chain', 'resnum']).sum()
+    res_total_asa = {resnum: atmasa_by_resnum['total_ASA'][resnum]\
+                     for resnum in atmasa_by_resnum.index}
+
     
     res_bsa_a = {res.split('/')[-1]:contacts_df[res].sum()\
                  for res in contacts_df.columns}
-    res_bsa_b = {res.split('/')[-1]:contacts_df.loc[res].sum()\
-                 for res in contacts_df.index}
+    res_bsa_a = {}
+    res_bsa_b = {}
+
+    for r in contacts_df.columns:
+        rr = r.split('/')
+        res = (rr[1], rr[2])
+        res_bsa_a[res] = contacts_df[r].sum()
     
-    res_total_asa_a = {resnum: res_bsa_a[resnum]+res_total_asa[resnum] for resnum in res_bsa_a}
-    res_total_asa_b = {resnum: res_bsa_b[resnum]+res_total_asa[resnum] for resnum in res_bsa_b}
+    for r in contacts_df.index:
+        rr = r.split('/')
+        res = (rr[1], rr[2])
+        res_bsa_a[res] = contacts_dfi.loc[r].sum()
+
+    res_total_asa_a = {res: res_bsa_a[res]+res_total_asa[res] for res in res_bsa_a}
+    res_total_asa_b = {res: res_bsa_b[res]+res_total_asa[res] for res in res_bsa_b}
     
     for res in res_total_asa_a:
         res_bsa_asa_a[res] = res_bsa_a[res] / res_total_asa_a[res]
@@ -300,7 +316,11 @@ def plot_contact_res_bsaasa(tablefile, atmasafile, output,
     ax1.set_yticklabels(df.index, rotation=0, size='x-large')
     ax4.tick_params(labelsize='x-large')
 
-    sns.barplot(x=list(df.columns), y=list(res_bsa_asa_a[e.split('/')[-1]]*100 for e in df.columns),
+    cols = []
+    for c in df.columns:
+        cc = c.split('/')
+        cols.append( (cc[1], cc[2]) )
+    sns.barplot(x=list(df.columns), y=list(res_bsa_asa_a[c]]*100 for c in cols),
                 color='#005599', ax=ax2, label="BSA/ASA %")
 
     ax2.set_xticklabels(list(df.columns), rotation=90, size='x-large')
