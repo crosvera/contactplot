@@ -273,7 +273,7 @@ def get_res_bsa_vs_asa(tablefile, atmasafile, skip_none_contact=True):
     for r in contacts_df.index:
         rr = r.split('/')
         res = (rr[1], rr[2])
-        res_bsa_a[res] = contacts_dfi.loc[r].sum()
+        res_bsa_a[res] = contacts_df.loc[r].sum()
 
     res_total_asa_a = {res: res_bsa_a[res]+res_total_asa[res] for res in res_bsa_a}
     res_total_asa_b = {res: res_bsa_b[res]+res_total_asa[res] for res in res_bsa_b}
