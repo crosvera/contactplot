@@ -297,6 +297,7 @@ def get_res_bsa_vs_asa(tablefile, atmasafile, skip_none_contact=True):
 
     atmasa = pd.read_csv(atmasafile, sep='\t')
     atmasa['resnum'] = atmasa['resnum'].astype(str)
+    atmasa['chain'] = atmasa['chain'].astype(str)
     atmasa_by_id = atmasa.set_index('ID')
     atom_total_asa = {str(atnum): atmasa_by_id['total_ASA'][atnum]\
                       for atnum in atmasa_by_id.index}
@@ -304,9 +305,6 @@ def get_res_bsa_vs_asa(tablefile, atmasafile, skip_none_contact=True):
     res_total_asa = {resnum: atmasa_by_resnum['total_ASA'][resnum]\
                      for resnum in atmasa_by_resnum.index}
 
-    
-    res_bsa_a = {res.split('/')[-1]:contacts_df[res].sum()\
-                 for res in contacts_df.columns}
     res_bsa_a = {}
     res_bsa_b = {}
 
@@ -318,7 +316,7 @@ def get_res_bsa_vs_asa(tablefile, atmasafile, skip_none_contact=True):
     for r in contacts_df.index:
         rr = r.split('/')
         res = (rr[1], rr[2])
-        res_bsa_a[res] = contacts_df.loc[r].sum()
+        res_bsa_b[res] = contacts_df.loc[r].sum()
 
     res_total_asa_a = {res: res_bsa_a[res]+res_total_asa[res] for res in res_bsa_a}
     res_total_asa_b = {res: res_bsa_b[res]+res_total_asa[res] for res in res_bsa_b}
