@@ -126,6 +126,7 @@ def get_ligand_protein_bsa_vs_asa(tablefile, atmasafile, skip_none_contact=True)
     
     atmasa = pd.read_csv(atmasafile, sep='\t')
     atmasa['resnum'] = atmasa['resnum'].astype(str)
+    atmasa['chain'] = atmasa['chain'].astype(str)
     atmasa_by_id = atmasa.set_index('ID')
     atom_total_asa = {str(atnum): atmasa_by_id['total_ASA'][atnum]\
                       for atnum in atmasa_by_id.index}
@@ -216,9 +217,9 @@ def plot_contact_ligand_protein(tablefile, atmasafile, output,
 
     #top_margin = 0.3
     #button_margin = 0.3
-    left_margin = 0.2
+    left_margin = 0.3
     right_margin = 0.2
-    factor = 0.8 if N > 100 else 1.5
+    factor = 0.8 if N > 100 else 1.8
     fig_height_in = matrix_height_in / (1 - top_margin - button_margin) * factor
     fig_weight_in = matrix_weight_in / (1 - left_margin - right_margin) * factor
 
@@ -237,10 +238,13 @@ def plot_contact_ligand_protein(tablefile, atmasafile, output,
     cbar_fmt = mtick.FuncFormatter(lambda x, pos: "{} $\AA^2$".format(x))
 
 
-    ax1 = plt.subplot2grid(inchsize, (0,1), colspan=inchsize[0]-2, rowspan=inchsize[1]-1)
-    ax2 = plt.subplot2grid(inchsize, (inchsize[0]-1,1), colspan=inchsize[0]-2, rowspan=1)
-    #ax3 = plt.subplot2grid(inchsize, (0,0), colspan=1, rowspan=inchsize[1]-1)
-    ax4 = plt.subplot2grid(inchsize, (0,inchsize[1]-1), colspan=1, rowspan=inchsize[1]-1)
+    #ax1 = plt.subplot2grid(inchsize, (0,1), colspan=inchsize[0]-2, rowspan=inchsize[1]-1)
+    #ax2 = plt.subplot2grid(inchsize, (inchsize[0]-1,1), colspan=inchsize[0]-2, rowspan=1)
+    ##ax3 = plt.subplot2grid(inchsize, (0,0), colspan=1, rowspan=inchsize[1]-1)
+    #ax4 = plt.subplot2grid(inchsize, (0,inchsize[1]-1), colspan=1, rowspan=inchsize[1]-1)
+    ax1 = plt.subplot2grid((20,20), (0,1), colspan=18, rowspan=19)
+    ax2 = plt.subplot2grid((20,20), (19,1), colspan=18, rowspan=1)
+    ax4 = plt.subplot2grid((20,20), (0,19), colspan=1, rowspan=19)
 
     sns.heatmap(df, ax=ax1, annot=False, xticklabels=False, yticklabels=True,
                 cmap='YlOrRd', cbar_ax=ax4, cbar_kws=dict(format=cbar_fmt))
@@ -276,7 +280,10 @@ def plot_contact_ligand_protein(tablefile, atmasafile, output,
     ax1.scatter(X, Y, color='gray', s=3)
     
     #legend = fig.legend(loc='lower left')
-    loc = (size*0.17/N, size*0.21/N)
+    #loc = (size*0.17/N, size*0.21/N)
+    p = ax2.get_position()
+    x0 = ((p.x0 * size)  - 140.0/dpi)/ size
+    loc = (x0, p.y0*1.11)
     legend = fig.legend(loc=loc)
 
     ax1.set_ylabel("")
@@ -374,7 +381,7 @@ def plot_contact_res_bsaasa(tablefile, atmasafile, output,
     button_margin = 0.3
     left_margin = 0.3
     right_margin = 0.3
-    factor = 0.8 if N > 100 else 1.6
+    factor = 0.8 if N > 100 else 2.0
     fig_height_in = matrix_height_in / (1 - top_margin - button_margin) * factor
     fig_weight_in = matrix_weight_in / (1 - left_margin - right_margin) * factor
 
@@ -393,10 +400,13 @@ def plot_contact_res_bsaasa(tablefile, atmasafile, output,
     cbar_fmt = mtick.FuncFormatter(lambda x, pos: "{} $\AA^2$".format(x))
 
 
-    ax1 = plt.subplot2grid(inchsize, (0,1), colspan=inchsize[0]-2, rowspan=inchsize[1]-1)
-    ax2 = plt.subplot2grid(inchsize, (inchsize[0]-1,1), colspan=inchsize[0]-2, rowspan=1)
-    #ax3 = plt.subplot2grid(inchsize, (0,0), colspan=1, rowspan=inchsize[1]-1)
-    ax4 = plt.subplot2grid(inchsize, (0,inchsize[1]-1), colspan=1, rowspan=inchsize[1]-1)
+    #ax1 = plt.subplot2grid(inchsize, (0,1), colspan=inchsize[0]-2, rowspan=inchsize[1]-1)
+    #ax2 = plt.subplot2grid(inchsize, (inchsize[0]-1,1), colspan=inchsize[0]-2, rowspan=1)
+    ##ax3 = plt.subplot2grid(inchsize, (0,0), colspan=1, rowspan=inchsize[1]-1)
+    #ax4 = plt.subplot2grid(inchsize, (0,inchsize[1]-1), colspan=1, rowspan=inchsize[1]-1)
+    ax1 = plt.subplot2grid((20,20), (0,1), colspan=18, rowspan=19)
+    ax2 = plt.subplot2grid((20,20), (19,1), colspan=18, rowspan=1)
+    ax4 = plt.subplot2grid((20,20), (0,19), colspan=1, rowspan=19)
 
     sns.heatmap(df, ax=ax1, annot=False, xticklabels=False, yticklabels=True,
                 cmap='YlOrRd', cbar_ax=ax4, cbar_kws=dict(format=cbar_fmt))
@@ -428,7 +438,10 @@ def plot_contact_res_bsaasa(tablefile, atmasafile, output,
     ax1.scatter(X, Y, color='gray', s=3)
     
     #legend = fig.legend(loc='lower left')
-    loc = (size*0.23/N, size*0.23/N)
+    #loc = (size*0.23/N, size*0.23/N)
+    p = ax2.get_position()
+    x0 = ((p.x0 * size)  - 140.0/dpi)/ size
+    loc = (x0, p.y0*1.11)
     legend = fig.legend(loc=loc)
 
     ax1.set_ylabel("")
@@ -514,8 +527,8 @@ def plot_contact_atom_bsaasa(tablefile, atmasafile, output,
 
     inchsize = (int(size[0]/dpi), int(size[1]/dpi))
     #print(inchsize)
-    size = ceil(max(fig_weight_in, fig_height_in))
-    inchsize = (int(size), int(size))
+    size = int(ceil(max(fig_weight_in, fig_height_in)))
+    inchsize = (size, size)
     #print(inchsize)
 
 
@@ -526,10 +539,13 @@ def plot_contact_atom_bsaasa(tablefile, atmasafile, output,
     cbar_fmt = mtick.FuncFormatter(lambda x, pos: "{} $\AA^2$".format(x))
 
 
-    ax1 = plt.subplot2grid(inchsize, (0,1), colspan=inchsize[0]-2, rowspan=inchsize[1]-1)
-    ax2 = plt.subplot2grid(inchsize, (inchsize[0]-1,1), colspan=inchsize[0]-2, rowspan=1)
-    #ax3 = plt.subplot2grid(inchsize, (0,0), colspan=1, rowspan=inchsize[1]-1)
-    ax4 = plt.subplot2grid(inchsize, (0,inchsize[1]-1), colspan=1, rowspan=inchsize[1]-1)
+    #ax1 = plt.subplot2grid(inchsize, (0,1), colspan=inchsize[0]-2, rowspan=inchsize[1]-1)
+    #ax2 = plt.subplot2grid(inchsize, (inchsize[0]-1,1), colspan=inchsize[0]-2, rowspan=1)
+    ##ax3 = plt.subplot2grid(inchsize, (0,0), colspan=1, rowspan=inchsize[1]-1)
+    #ax4 = plt.subplot2grid(inchsize, (0,inchsize[1]-1), colspan=1, rowspan=inchsize[1]-1)
+    ax1 = plt.subplot2grid((20,20), (0,1), colspan=18, rowspan=19)
+    ax2 = plt.subplot2grid((20,20), (19,1), colspan=18, rowspan=1)
+    ax4 = plt.subplot2grid((20,20), (0,19), colspan=1, rowspan=19)
 
     sns.heatmap(df, ax=ax1, annot=False, xticklabels=False, yticklabels=True,
                 cmap='YlOrRd', cbar_ax=ax4, cbar_kws=dict(format=cbar_fmt))
@@ -556,7 +572,9 @@ def plot_contact_atom_bsaasa(tablefile, atmasafile, output,
                        np.arange(0.5, len(indexes)))
     ax1.scatter(X, Y, color='gray', s=3)
     
-    loc = (size*0.6/N, size*0.6/N)
+    p = ax2.get_position()
+    x0 = ((p.x0 * size)  - 140.0/dpi)/ size
+    loc = (x0, p.y0*1.11)
     legend = fig.legend(loc=loc)
 
     ax1.set_ylabel("")
