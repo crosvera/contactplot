@@ -167,22 +167,17 @@ def get_ligand_protein_bsa_vs_asa(tablefile, atmasafile, skip_none_contact=True)
     return ligand_bsa_asa, protein_bsa_asa
 
 
-def plot_contact_ligand_protein(tablefile, atmasafile, output,
-                                skip_none_contact=True, size=(1920,1920), dpi=72):
-    df, pivot = get_ligand_protein_contact_area(tablefile, skip_none_contact)
 
-    ligand_bsa_asa, protein_bsa_asa = get_ligand_protein_bsa_vs_asa(tablefile, atmasafile, skip_none_contact)
- 
-    columns = df.columns
-    indexes = df.index
-    N = max(len(columns), len(indexes))
+def get_size(df, dpi):
+    N = max(len(df.columns), len(df.index))
+    W = max(max([len(c) for c in df.columns]),
+            max([len(i) for i in df.index]))
+
     if N > 100:
-        sns.set_context("talk")
+        sns.set_context('talk')
     else:
-        sns.set_context("paper")
+        sns.set_context('paper')
 
-    structurename = tablefile.split(os.sep)[-1].split('.')[0]
-    
     dsize = 18
     fontsizes = {
         'xx-small': (3/5.) * dsize,
@@ -202,35 +197,42 @@ def plot_contact_ligand_protein(tablefile, atmasafile, output,
     except KeyError:
         fontsize_pt = plt.rcParams['ytick.labelsize']
         #print(2, fontsize_pt)
-    matrix_height_pt = fontsize_pt * df.shape[0] * 1.05
+    matrix_height_pt = fontsize_pt * (N + W)
     matrix_height_in = matrix_height_pt / dpi
 
-    matrix_weight_pt = fontsize_pt * df.shape[1] * 1.05
+    matrix_weight_pt = fontsize_pt * (N + W)
     matrix_weight_in = matrix_weight_pt / dpi
 
-    if pivot == 'index':
-        top_margin = 0.3
-        button_margin = 0.43 if N <= 100 else 0.3
-    elif pivot == 'column':
-        top_margin = 0.3
-        button_margin = 0.3
-
-    #top_margin = 0.3
-    #button_margin = 0.3
+    top_margin = 0.3 #if N >= 100 else 0.4
+    button_margin = 0.3
     left_margin = 0.3
     right_margin = 0.2
     factor = 0.8 if N > 100 else 1.8
     fig_height_in = matrix_height_in / (1 - top_margin - button_margin) * factor
     fig_weight_in = matrix_weight_in / (1 - left_margin - right_margin) * factor
 
-    inchsize = (int(size[0]/dpi), int(size[1]/dpi))
-    #print(inchsize)
-    size = max(fig_weight_in, fig_height_in)
+    size = max(fig_weight_in, fig_height_in) *1.1
     inchsize = (int(ceil(size)), int(ceil(size)))
     #print(inchsize)
+    return inchsize
 
 
+
+def plot_contact_ligand_protein(tablefile, atmasafile, output,
+                                skip_none_contact=True, size=(1920,1920), dpi=72):
+    df, pivot = get_ligand_protein_contact_area(tablefile, skip_none_contact)
+
+    ligand_bsa_asa, protein_bsa_asa = get_ligand_protein_bsa_vs_asa(tablefile, atmasafile, skip_none_contact)
+ 
+    columns = df.columns
+    indexes = df.index
+    N = max(len(columns), len(indexes))
+
+    structurename = tablefile.split(os.sep)[-1].split('.')[0]
+    
+    inchsize = get_size(df, dpi)
     fig = plt.figure(figsize=inchsize)
+    size = inchsize[0]
 
 
 
@@ -282,7 +284,8 @@ def plot_contact_ligand_protein(tablefile, atmasafile, output,
     #legend = fig.legend(loc='lower left')
     #loc = (size*0.17/N, size*0.21/N)
     p = ax2.get_position()
-    x0 = ((p.x0 * size)  - 140.0/dpi)/ size
+    legend_size = 100.0 if N < 100 else 140.0
+    x0 = ((p.x0 * size)  - legend_size/dpi)/ size
     loc = (x0, p.y0*1.11)
     legend = fig.legend(loc=loc)
 
@@ -345,56 +348,13 @@ def plot_contact_res_bsaasa(tablefile, atmasafile, output,
     columns = df.columns
     indexes = df.index
     N = max(len(columns), len(indexes))
-    if N > 100:
-        sns.set_context("talk")
-    else:
-        sns.set_context("paper")
 
     structurename = tablefile.split(os.sep)[-1].split('.')[0]
+
     
-    dsize = 18
-    fontsizes = {
-        'xx-small': (3/5.) * dsize,
-        'x-small': (3/4.) * dsize,
-        'small': (8/9.) * dsize,
-        'medium': 1 * dsize,
-        'large': (6/5.) * dsize,
-        'x-large': (3/2.) * dsize,
-        'xx-large': 2 * dsize,
-    }
-
-
-    #adjust size
-    try:
-        fontsize_pt = fontsizes[plt.rcParams['ytick.labelsize']]
-        #print(1, fontsize_pt)
-    except KeyError:
-        fontsize_pt = plt.rcParams['ytick.labelsize']
-        #print(2, fontsize_pt)
-    matrix_height_pt = fontsize_pt * df.shape[0] * 1.05
-    matrix_height_in = matrix_height_pt / dpi
-
-    matrix_weight_pt = fontsize_pt * df.shape[1] * 1.05
-    matrix_weight_in = matrix_weight_pt / dpi
-
-    top_margin = 0.3
-    button_margin = 0.3
-    left_margin = 0.3
-    right_margin = 0.3
-    factor = 0.8 if N > 100 else 2.0
-    fig_height_in = matrix_height_in / (1 - top_margin - button_margin) * factor
-    fig_weight_in = matrix_weight_in / (1 - left_margin - right_margin) * factor
-
-
-    inchsize = (int(size[0]/dpi), int(size[1]/dpi))
-    #print(inchsize)
-    size = max(fig_weight_in, fig_height_in)
-    inchsize = (int(ceil(size)), int(ceil(size)))
-    #print(inchsize)
-
-
+    inchsize = get_size(df, dpi)
     fig = plt.figure(figsize=inchsize)
-
+    size = inchsize[0]
 
     #cbar formatter:
     cbar_fmt = mtick.FuncFormatter(lambda x, pos: "{} $\AA^2$".format(x))
@@ -440,7 +400,8 @@ def plot_contact_res_bsaasa(tablefile, atmasafile, output,
     #legend = fig.legend(loc='lower left')
     #loc = (size*0.23/N, size*0.23/N)
     p = ax2.get_position()
-    x0 = ((p.x0 * size)  - 140.0/dpi)/ size
+    legend_size = 100.0 if N < 100 else 140.0
+    x0 = ((p.x0 * size)  - legend_size/dpi)/ size
     loc = (x0, p.y0*1.11)
     legend = fig.legend(loc=loc)
 
@@ -486,54 +447,12 @@ def plot_contact_atom_bsaasa(tablefile, atmasafile, output,
     columns = df.columns
     indexes = df.index
     N = max(len(columns), len(indexes))
-    if N > 100:
-        sns.set_context("paper")
-    else:
-        sns.set_context("talk")
 
     structurename = tablefile.split(os.sep)[-1].split('.')[0]
-    
-    dsize = 18
-    fontsizes = {
-        'xx-small': (3/5.) * dsize,
-        'x-small': (3/4.) * dsize,
-        'small': (8/9.) * dsize,
-        'medium': 1 * dsize,
-        'large': (6/5.) * dsize,
-        'x-large': (3/2.) * dsize,
-        'xx-large': 2 * dsize,
-    }
 
-
-    #adjust size
-    try:
-        fontsize_pt = fontsizes[plt.rcParams['ytick.labelsize']]
-    except KeyError:
-        fontsize_pt = plt.rcParams['ytick.labelsize']
-
-    matrix_height_pt = fontsize_pt * df.shape[0] 
-    matrix_height_in = matrix_height_pt / dpi
-
-    matrix_weight_pt = fontsize_pt * df.shape[1]
-    matrix_weight_in = matrix_weight_pt / dpi
-
-    top_margin = 0.35
-    button_margin = 0.35
-    left_margin = 0.35
-    right_margin = 0.35
-    factor = 0.5 if N > 100 else 1.
-    fig_height_in = matrix_height_in / (1 - top_margin - button_margin) * factor
-    fig_weight_in = matrix_weight_in / (1 - left_margin - right_margin) * factor
-
-    inchsize = (int(size[0]/dpi), int(size[1]/dpi))
-    #print(inchsize)
-    size = int(ceil(max(fig_weight_in, fig_height_in)))
-    inchsize = (size, size)
-    #print(inchsize)
-
-
+    inchsize = get_size(df, dpi)
     fig = plt.figure(figsize=inchsize)
-
+    size = inchsize[0]
 
     #cbar formatter:
     cbar_fmt = mtick.FuncFormatter(lambda x, pos: "{} $\AA^2$".format(x))
@@ -573,7 +492,8 @@ def plot_contact_atom_bsaasa(tablefile, atmasafile, output,
     ax1.scatter(X, Y, color='gray', s=3)
     
     p = ax2.get_position()
-    x0 = ((p.x0 * size)  - 140.0/dpi)/ size
+    legend_size = 100.0 if N < 100 else 140.0
+    x0 = ((p.x0 * size)  - legend_size/dpi)/ size
     loc = (x0, p.y0*1.11)
     legend = fig.legend(loc=loc)
 
