@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 """Usage:
-    contactplot.py residue <tablefile> <atmasafile> [--skip-none-contact <outputfile>]
-    contactplot.py atom  <tablefile> <atmasafile> [--skip-none-contact <outputfile>]
-    contactplot.py ligand-protein  <tablefile> <atmasafile> [--skip-none-contact <outputfile>]
+    contactplot.py residue <tablefile> <atmasafile> [--skip-non-contact <outputfile>]
+    contactplot.py atom  <tablefile> <atmasafile> [--skip-non-contact <outputfile>]
+    contactplot.py protein-ligand  <tablefile> <atmasafile> [--skip-non-contact <outputfile>]
 
 """
 from docopt import docopt
@@ -515,13 +515,13 @@ def check_tablefile_type(tablefile):
 
 def contactplot():
     args = docopt(__doc__)
-    skip_none_contact = args['--skip-none-contact']
+    skip_none_contact = args['--skip-non-contact']
     tablefile = args['<tablefile>']
     atmasafile = args['<atmasafile>']
     output = args['<outputfile>']
     if not output:
-        if args['ligand-protein']:
-            output = os.path.splitext(tablefile)[0] + '_ligand_protein.png'
+        if args['protein-ligand']:
+            output = os.path.splitext(tablefile)[0] + '_protein_ligand.png'
         else:
             output = os.path.splitext(tablefile)[0] + '.png'
 
@@ -539,7 +539,7 @@ def contactplot():
             print ("ERROR: Incorrect tablefile, you should use the *.by_atom.tsv file.")
             sys.exit(-1)
         plot_contact_atom_bsaasa(tablefile, atmasafile, output, skip_none_contact)
-    elif args['ligand-protein']:
+    elif args['protein-ligand']:
         if check_tablefile_type(tablefile)[0] != 'by_atom':
             print ("ERROR: Incorrect tablefile, you should use the *.by_atom.tsv file.")
             sys.exit(-1)
