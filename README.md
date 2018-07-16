@@ -38,7 +38,6 @@ Open your terminal (`cmd` in Windows) and run the following command:
     pip install git+https://github.com/crosvera/contactplot.git
 
 ### Usage
-`contactplot.py` has the following options:
 
 `coontactplot.py` has three operational modes:
 - `residue`: Plots the Buried Surface Area (BSA or Delta SASA) matrix files
@@ -50,6 +49,7 @@ Open your terminal (`cmd` in Windows) and run the following command:
   as heatmap.
 
 Usage:
+
     contactplot.py residue <tablefile> <atmasafile> [--skip-non-contact <outputfile>]
     contactplot.py atom  <tablefile> <atmasafile> [--skip-non-contact <outputfile>]
     contactplot.py protein-ligand  <tablefile> <atmasafile> [--skip-non-contact <outputfile>]

@@ -20,6 +20,7 @@ import sys
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 from math import ceil
+import gc
 
 
 def get_res_contact_area(tablefile, skip_none_contact=False):
@@ -173,10 +174,15 @@ def get_size(df, dpi):
     W = max(max([len(c) for c in df.columns]),
             max([len(i) for i in df.index]))
 
-    if N > 100:
+    if N>= 1000:
+        sns.set_context('notebook', font_scale=0.5)
+        factor = 0.65
+    elif N > 100:
         sns.set_context('talk')
+        factor = 0.8
     else:
         sns.set_context('paper')
+        factor = 1.8
 
     dsize = 18
     fontsizes = {
@@ -207,7 +213,6 @@ def get_size(df, dpi):
     button_margin = 0.3
     left_margin = 0.3
     right_margin = 0.2
-    factor = 0.8 if N > 100 else 1.8
     fig_height_in = matrix_height_in / (1 - top_margin - button_margin) * factor
     fig_weight_in = matrix_weight_in / (1 - left_margin - right_margin) * factor
 
@@ -453,6 +458,7 @@ def plot_contact_atom_bsaasa(tablefile, atmasafile, output,
     inchsize = get_size(df, dpi)
     fig = plt.figure(figsize=inchsize)
     size = inchsize[0]
+    gc.collect()
 
     #cbar formatter:
     cbar_fmt = mtick.FuncFormatter(lambda x, pos: "{} $\AA^2$".format(x))
