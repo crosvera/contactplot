@@ -174,9 +174,13 @@ def get_size(df, dpi):
     W = max(max([len(c) for c in df.columns]),
             max([len(i) for i in df.index]))
 
+    #print (N)
     if N>= 1000:
         sns.set_context('notebook', font_scale=0.5)
         factor = 0.65
+    elif N > 700:
+        sns.set_context('paper', font_scale=0.8)
+        factor = 0.7
     elif N > 100:
         sns.set_context('talk')
         factor = 0.8
