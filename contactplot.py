@@ -238,6 +238,7 @@ def plot_contact_ligand_protein(tablefile, atmasafile, output,
     inchsize = get_size(df, dpi)
     fig = plt.figure(figsize=inchsize)
     size = inchsize[0]
+    gc.collect()
 
 
 
@@ -360,6 +361,7 @@ def plot_contact_res_bsaasa(tablefile, atmasafile, output,
     inchsize = get_size(df, dpi)
     fig = plt.figure(figsize=inchsize)
     size = inchsize[0]
+    gc.collect()
 
     #cbar formatter:
     cbar_fmt = mtick.FuncFormatter(lambda x, pos: "{} $\AA^2$".format(x))
