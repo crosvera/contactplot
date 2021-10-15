@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 """Usage:
-    contactplot.py residue <tablefile> <atmasafile> [--skip-non-contact <outputfile>]
-    contactplot.py atom  <tablefile> <atmasafile> [--skip-non-contact <outputfile>]
-    contactplot.py protein-ligand  <tablefile> <atmasafile> [--skip-non-contact <outputfile>]
+    contactplot.py residue <tablefile> <atmasafile> [--skip-non-contact <outputfile> --exclude-below=<below> --exclude-above=<above>]
+    contactplot.py atom  <tablefile> <atmasafile> [--skip-non-contact <outputfile> --exclude-below=<below> --exclude-above=<above>]
+    contactplot.py protein-ligand  <tablefile> <atmasafile> [--skip-non-contact <outputfile> --exclude-below=<below> --exclude-above=<above>]
 
 """
 from docopt import docopt
@@ -226,10 +226,20 @@ def get_size(df, dpi):
     return inchsize
 
 
+def filter_out_area(df, below=None, above=None):
+    if below is not None:
+        df = df.apply(lambda x: np.where(x < below, np.nan, x))
+    if above is not None:
+        df = df.apply(lambda x: np.where(x > above, np.nan, x))
+
+    return df
+    
+
 
 def plot_contact_ligand_protein(tablefile, atmasafile, output,
-                                skip_none_contact=True, size=(1920,1920), dpi=72):
+                                skip_none_contact=True, size=(1920,1920), dpi=72, filter_below=None, filter_above=None):
     df, pivot = get_ligand_protein_contact_area(tablefile, skip_none_contact)
+    df = filter_out_area(df, filter_below, filter_above)
 
     ligand_bsa_asa, protein_bsa_asa = get_ligand_protein_bsa_vs_asa(tablefile, atmasafile, skip_none_contact)
  
@@ -350,11 +360,12 @@ def get_res_bsa_vs_asa(tablefile, atmasafile, skip_none_contact=True):
 
 
 def plot_contact_res_bsaasa(tablefile, atmasafile, output,
-                            skip_none_contact=True, size=(1440,1400), dpi=72):
+                            skip_none_contact=True, size=(1440,1400), dpi=72, filter_below=None, filter_above=None):
     res_bsa_asa_a, res_bsa_asa_b = get_res_bsa_vs_asa(tablefile, atmasafile,
                                                       skip_none_contact)
 
     df = get_res_contact_area(tablefile, skip_none_contact)
+    df = filter_out_area(df, filter_below, filter_above)
     columns = df.columns
     indexes = df.index
     N = max(len(columns), len(indexes))
@@ -450,11 +461,12 @@ def get_atom_bsa_vs_asa(tablefile, atmasafile, skip_none_contact=True):
 
 
 def plot_contact_atom_bsaasa(tablefile, atmasafile, output,
-                             skip_none_contact=True, size=(1920,1920), dpi=72):
+                             skip_none_contact=True, size=(1920,1920), dpi=72, filter_below=None, filter_above=None):
     atom_bsa_asa_a, atom_bsa_asa_b = get_atom_bsa_vs_asa(tablefile, atmasafile,
                                                          skip_none_contact)
 
     df = get_atom_contact_area(tablefile, skip_none_contact)
+    df = filter_out_area(df, filter_below, filter_above)
     columns = df.columns
     indexes = df.index
     N = max(len(columns), len(indexes))
@@ -531,6 +543,8 @@ def contactplot():
     tablefile = args['<tablefile>']
     atmasafile = args['<atmasafile>']
     output = args['<outputfile>']
+    below = float(args['--exclude-below']) if args['--exclude-below']  else None
+    above = float(args['--exclude-above']) if args['--exclude-above']  else None
     if not output:
         if args['protein-ligand']:
             output = os.path.splitext(tablefile)[0] + '_protein_ligand.png'
@@ -545,12 +559,12 @@ def contactplot():
         if check_tablefile_type(tablefile)[0] != 'by_res':
             print ("ERROR: Incorrect tablefile, you should use the *.by_res.tsv file.")
             sys.exit(-1)
-        plot_contact_res_bsaasa(tablefile, atmasafile, output, skip_none_contact)
+        plot_contact_res_bsaasa(tablefile, atmasafile, output, skip_none_contact, filter_below=below, filter_above=above)
     elif args['atom']:
         if check_tablefile_type(tablefile)[0] != 'by_atom':
             print ("ERROR: Incorrect tablefile, you should use the *.by_atom.tsv file.")
             sys.exit(-1)
-        plot_contact_atom_bsaasa(tablefile, atmasafile, output, skip_none_contact)
+        plot_contact_atom_bsaasa(tablefile, atmasafile, output, skip_none_contact, filter_below=below, filter_above=above)
     elif args['protein-ligand']:
         if check_tablefile_type(tablefile)[0] != 'by_atom':
             print ("ERROR: Incorrect tablefile, you should use the *.by_atom.tsv file.")
@@ -558,7 +572,7 @@ def contactplot():
         if check_tablefile_type(tablefile)[1] == 'matrix':
             print ("ERROR: Table file type 'matrix' still not supported in this mode.")
             sys.exit(-1)
-        plot_contact_ligand_protein(tablefile, atmasafile, output, skip_none_contact)
+        plot_contact_ligand_protein(tablefile, atmasafile, output, skip_none_contact, filter_below=below, filter_above=above)
 
 
 if __name__ == '__main__':

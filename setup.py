@@ -6,7 +6,7 @@ setup(
     name="contactplot",
     version=version,
     author="Carlos Rios V.",
-    author_email="crios@cadetech.cl",
+    author_email="crosvera@gmail.com",
     description="Contactplot parse DrSasa files and plots the atom/residue buried surfice",
     packages=find_packages(),
     py_modules=[],
